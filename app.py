@@ -48,7 +48,12 @@ def load_data_and_detect_anomalies():
             group[f'{col}_zscore'] = (group[col] - roll_mean) / (roll_std + 1e-8)
         return group.dropna()
 
-    df_features = df.groupby('Ticker').apply(engineer_features).reset_index(drop=True)
+    dfs = []
+    for ticker, group in df.groupby('Ticker'):
+        res = engineer_features(group.copy())
+        res['Ticker'] = ticker
+        dfs.append(res)
+    df_features = pd.concat(dfs).reset_index(drop=True)
     
     features_for_modeling = ['daily_return_zscore', 'volatility_7d_zscore', 'volume_spike_ratio_zscore', 'price_gap_zscore']
     
